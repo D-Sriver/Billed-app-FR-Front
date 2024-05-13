@@ -2,13 +2,23 @@
  * @jest-environment jsdom
  */
 
-import { screen, waitFor } from "@testing-library/dom";
-import BillsUI from "../views/BillsUI.js";
-import { bills } from "../fixtures/bills.js";
-import { ROUTES_PATH } from "../constants/routes.js";
+import { fireEvent, screen, waitFor } from "@testing-library/dom";
 import { localStorageMock } from "../__mocks__/localStorage.js";
+import mockStore from "../__mocks__/store.js";
+import { ROUTES_PATH } from "../constants/routes.js";
+import Bills from "../containers/Bills.js";
+import { bills } from "../fixtures/bills.js";
+import BillsUI from "../views/BillsUI.js";
 
 import router from "../app/Router.js";
+
+import "@testing-library/jest-dom/extend-expect";
+
+jest.mock("../app/Store", () => mockStore);
+
+const $ = require("jquery");
+global.$ = global.jQuery = $;
+$.fn.modal = jest.fn();
 
 describe("Given I am connected as an employee", () => {
   describe("When I am on Bills Page", () => {
@@ -42,6 +52,36 @@ describe("Given I am connected as an employee", () => {
       const antiChrono = (a, b) => (a < b ? 1 : -1);
       const datesSorted = [...dates].sort(antiChrono);
       expect(dates).toEqual(datesSorted);
+    });
+
+    // ajout du test [cover Ligne 20] si je clique sur le bouton « Nouvelle facture » accéder à la page Nouvelle facture.
+    test("Then if I click the 'New Bill' button I should navigate to the New Bill page", async () => {
+      Object.defineProperty(window, "localStorage", {
+        // définir une valeur pour localStorage
+        value: localStorageMock,
+      });
+      //si je suis connecté en tant que type "employee"
+      window.localStorage.setItem(
+        "user",
+        JSON.stringify({
+          type: "Employee",
+        })
+      );
+      //créer un élément div
+      document.body.innerHTML = BillsUI({ data: bills });
+      const onNavigate = jest.fn();
+      // créer une instance de la classe Bills
+      new Bills({
+        document,
+        onNavigate,
+        store: null,
+        localStorage: window.localStorage,
+      });
+      // récupérer le bouton "Nouvelle facture"
+      const newBillBtn = screen.getByTestId("btn-new-bill");
+      fireEvent.click(newBillBtn);
+      // espère que la fonction onNavigate ait été appelée avec l'argument "#employee/bill/new"
+      expect(onNavigate).toHaveBeenLastCalledWith("#employee/bill/new");
     });
   });
 });
