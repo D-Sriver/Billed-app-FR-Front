@@ -19,22 +19,23 @@ export default class NewBill {
   }
   handleChangeFile = (e) => {
     e.preventDefault();
-    const file = this.document.querySelector(`input[data-testid="file"]`)
-      .files[0];
-    const filePath = e.target.value.split(/\\/g);
+    const fileInput = this.document.querySelector(`input[data-testid="file"]`);
+    const file = fileInput.files[0];
+    const filePath = fileInput.value.split(/\\/g);
+    const fileName = filePath[filePath.length - 1]; // Define fileName here
+
     // création d'une regex pour les extensions de fichier
     const Extensions = /(\.jpg|\.jpeg|\.png)$/i;
 
     // test la regex pour fileName
     if (!Extensions.test(fileName)) {
-      this.document.querySelector(`input[data-testid="file"]`).value = "";
+      fileInput.value = "";
       alert(
         "Ce type de fichier n'est pas supporté. Merci de choisir un fichier jpeg, jpg ou png"
       );
       return;
     }
 
-    const fileName = filePath[filePath.length - 1];
     const formData = new FormData();
     const email = JSON.parse(localStorage.getItem("user")).email;
     formData.append("file", file);
@@ -49,13 +50,13 @@ export default class NewBill {
         },
       })
       .then(({ fileUrl, key }) => {
-        console.log(fileUrl);
         this.billId = key;
         this.fileUrl = fileUrl;
         this.fileName = fileName;
       })
       .catch((error) => console.error(error));
   };
+
   handleSubmit = (e) => {
     e.preventDefault();
     console.log(
