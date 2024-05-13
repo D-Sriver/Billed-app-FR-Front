@@ -83,5 +83,37 @@ describe("Given I am connected as an employee", () => {
       // espère que la fonction onNavigate ait été appelée avec l'argument "#employee/bill/new"
       expect(onNavigate).toHaveBeenLastCalledWith("#employee/bill/new");
     });
+    // ajout du test [cover Ligne 24-27] si je clique sur l'icône d'oeil, la modale doit s'afficher
+    test("Then clicking an eye icon should display the modal", async () => {
+      Object.defineProperty(window, "localStorage", {
+        value: localStorageMock,
+      });
+      //si je suis connecté en tant que type "employee"
+      window.localStorage.setItem(
+        "user",
+        JSON.stringify({
+          type: "Employee",
+        })
+      );
+
+      document.body.innerHTML = BillsUI({ data: bills });
+      const onNavigate = jest.fn();
+      // créer une instance de la classe Bills
+      new Bills({
+        document,
+        onNavigate,
+        store: null,
+        localStorage: window.localStorage,
+      });
+      // récupérer le premier icône d'oeil
+      const firstEyeIcon = screen.getAllByTestId("icon-eye")[0];
+      // attendre que l'icône d'oeil soit dans le document
+      await waitFor(() =>
+        // espère que l'icône d'oeil est dans le document
+        expect(firstEyeIcon).toBeInTheDocument()
+      );
+      // cliquer sur l'icône d'oeil
+      fireEvent.click(firstEyeIcon);
+    });
   });
 });
