@@ -10,37 +10,43 @@ export default class NewBill {
       `form[data-testid="form-new-bill"]`
     );
     formNewBill.addEventListener("submit", this.handleSubmit);
+
     const file = this.document.querySelector(`input[data-testid="file"]`);
     file.addEventListener("change", this.handleChangeFile);
     this.fileUrl = null;
     this.fileName = null;
     this.billId = null;
+
     new Logout({ document, localStorage, onNavigate });
   }
   handleChangeFile = (e) => {
     e.preventDefault();
-    const fileInput = this.document.querySelector(`input[data-testid="file"]`);
-    const file = fileInput.files[0];
-    const filePath = fileInput.value.split(/\\/g);
-    const fileName = filePath[filePath.length - 1]; // Define fileName here
+    const file = this.document.querySelector(`input[data-testid="file"]`)
+      .files[0];
+    // split le chemin du fichier pour récupérer le nom du fichier
+    const filePath = e.target.value.split(/\\/g);
+    // récupérer le nom du fichier - le dernier élément du tableau
+    const fileName = filePath[filePath.length - 1];
+    // regex pour les extensions de fichier (jpg, jpeg, png)
+    const allowedExtensions = /(\.jpg|\.jpeg|\.png)$/i;
+    // récupérer les éléments d'erreur et de succès
+    const errorMessage = this.document.querySelector("#errorMessage");
+    // change la couleur du texte en rouge
+    errorMessage.style.color = "red";
 
-    // création d'une regex pour les extensions de fichier
-    const Extensions = /(\.jpg|\.jpeg|\.png)$/i;
-
-    // test la regex pour fileName
-    if (!Extensions.test(fileName)) {
-      fileInput.value = "";
-      alert(
-        "Ce type de fichier n'est pas supporté. Merci de choisir un fichier jpeg, jpg ou png"
-      );
+    if (!allowedExtensions.test(fileName)) {
+      this.document.querySelector(`input[data-testid="file"]`).value = "";
+      // dans le cas où le fichier n'est pas supporté afficher le message suivant
+      errorMessage.textContent =
+        "Ce type de fichier n'est pas supporté. Merci de choisir un fichier jpeg, jpg ou png";
       return;
     }
-
     const formData = new FormData();
     const email = JSON.parse(localStorage.getItem("user")).email;
     formData.append("file", file);
     formData.append("email", email);
 
+    // créer une nouvelle facture
     this.store
       .bills()
       .create({
@@ -49,11 +55,15 @@ export default class NewBill {
           noContentType: true,
         },
       })
+      // récupérer l'url du fichier
       .then(({ fileUrl, key }) => {
+        // afficher le nom du fichier
+        console.log(fileUrl);
         this.billId = key;
         this.fileUrl = fileUrl;
         this.fileName = fileName;
       })
+      // affiche le message d'erreur
       .catch((error) => console.error(error));
   };
 
@@ -87,6 +97,7 @@ export default class NewBill {
   };
 
   // not need to cover this function by tests
+  /* istanbul ignore next */
   updateBill = (bill) => {
     if (this.store) {
       this.store
