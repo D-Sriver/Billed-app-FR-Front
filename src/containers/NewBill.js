@@ -41,6 +41,7 @@ export default class NewBill {
         "Ce type de fichier n'est pas supporté. Merci de choisir un fichier jpeg, jpg ou png";
       return;
     }
+    errorMessage.textContent = "";
     const formData = new FormData();
     const email = JSON.parse(localStorage.getItem("user")).email;
     formData.append("file", file);
